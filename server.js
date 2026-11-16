@@ -25,9 +25,9 @@ function loadEnv() {
 loadEnv();
 
 const PORT = process.env.PORT || 3000;
-const PREVIEW_DIR = path.join(__dirname, 'preview');
+const PUBLIC_DIR = path.join(__dirname, 'public');
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyCriS_CpbW_fD4CpXwtE9RFMs-hi7ahAfM';
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
 
 // 2. Rubric Weights Specification (Immutable 10-Dimension Rubric)
 const RUBRIC_WEIGHTS = {
@@ -546,9 +546,9 @@ const server = http.createServer(async (req, res) => {
 
   // --- STATIC FILE SERVING ---
   let filePath = reqPath === '/' || reqPath === '' ? '/index.html' : reqPath;
-  const fullPath = path.join(PREVIEW_DIR, filePath);
+  const fullPath = path.join(PUBLIC_DIR, filePath);
 
-  if (!fullPath.startsWith(PREVIEW_DIR)) {
+  if (!fullPath.startsWith(PUBLIC_DIR)) {
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     return res.end('403 Forbidden');
   }
