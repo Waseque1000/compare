@@ -528,15 +528,11 @@
             </svg>
           </div>
           <div>
-            <h3 class="text-sm font-bold text-slate-900">Validation Passed &bull; Ready for Execution</h3>
-            <h3 class="text-sm font-bold text-slate-900">Live AI Evaluation Engine &bull; Gemini 3.8 Flash Ready</h3>
-            <p class="text-xs text-slate-500">Drafts normalized &bull; 10 dimensions evaluated in parallel &bull;
-              Average runtime ~14s</p>
-              Deterministic weighted scoring</p>
+            <h3 class="text-sm font-bold text-slate-900">Live AI Evaluation Engine &bull; Gemini Ready</h3>
+            <p class="text-xs text-slate-500">Drafts normalized &bull; 10 dimensions evaluated in parallel &bull; Deterministic weighted scoring</p>
           </div>
         </div>
 
-        <button onclick="runComparisonSimulation()"
         <button id="btn-run-compare" onclick="runComparison()"
           class="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm shadow-lg shadow-blue-600/25 transition-all flex items-center justify-center gap-2.5 active:scale-[0.98]">
           <span>Run Comparative Analysis</span>
@@ -1295,7 +1291,6 @@
       updateCounters(slotId);
     }
 
-    function runComparisonSimulation() {
     function showError(title, msg) {
       const banner = document.getElementById('error-banner');
       const titleEl = document.getElementById('error-banner-title');
@@ -1375,16 +1370,9 @@
       step1.className = "flex items-center gap-2.5 text-emerald-700 font-semibold";
       step1.innerHTML = `<svg class="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>1. Drafts normalized & bounds verified</span>`;
 
-      setTimeout(() => {
-        document.getElementById('step-2').className = "flex items-center gap-2.5 text-emerald-700 font-semibold";
-        document.getElementById('step-2').innerHTML = "<svg class='w-4 h-4 text-emerald-600' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5'><polyline points='20 6 9 17 4 12'/></svg> <span>2. Evaluated drafts with Gemini 2.5 Flash</span>";
-        document.getElementById('step-3').className = "flex items-center gap-2.5 text-blue-700 font-semibold animate-pulse";
-        document.getElementById('step-3').innerHTML = "<span class='w-2.5 h-2.5 rounded-full bg-blue-600 animate-ping'></span> <span>3. Computing deterministic overall scores & matrix...</span>";
-      }, 1200);
       step2.className = "flex items-center gap-2.5 text-blue-700 font-semibold animate-pulse";
-      step2.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-blue-600 animate-ping"></span> <span>2. Evaluating 10 dimensions with Gemini 3.8 Flash...</span>`;
+      step2.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-blue-600 animate-ping"></span> <span>2. Evaluating 10 dimensions with Gemini AI...</span>`;
 
-      setTimeout(() => {
       step3.className = "flex items-center gap-2.5 text-slate-400 font-medium";
       step3.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span> <span>3. Computing deterministic scores & winner resolution</span>`;
 
@@ -1408,7 +1396,7 @@
         }
 
         step2.className = "flex items-center gap-2.5 text-emerald-700 font-semibold";
-        step2.innerHTML = `<svg class="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>2. Multi-domain evaluation complete (Gemini 3.8 Flash)</span>`;
+        step2.innerHTML = `<svg class="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>2. Multi-domain evaluation complete</span>`;
 
         step3.className = "flex items-center gap-2.5 text-emerald-700 font-semibold";
         step3.innerHTML = `<svg class="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>3. Deterministic overall scores & matrix resolved</span>`;
@@ -1424,8 +1412,6 @@
 
       } catch (err) {
         modal.classList.add('hidden');
-        switchView('report');
-      }, 2200);
         showError('AI Evaluation Error', err.message || 'Failed to complete comparison analysis.');
       }
     }
