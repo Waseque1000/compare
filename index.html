@@ -644,10 +644,7 @@
           <div
             class="bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-emerald-200/80 shadow-md text-center md:text-right space-y-3 min-w-[200px]">
             <div>
-              <div class="text-4xl font-extrabold text-emerald-700 font-mono tracking-tight">85<span
-              <div id="winner-score-num" class="text-4xl font-extrabold text-emerald-700 font-mono tracking-tight">85<span
-                  class="text-base font-normal text-slate-400">/100</span></div>
-              <span class="text-xs font-bold text-emerald-900 uppercase tracking-wider">Weighted Score</span>
+              <div id="winner-score-num" class="text-4xl font-extrabold text-emerald-700 font-mono tracking-tight">85<span class="text-base font-normal text-slate-400">/100</span></div>
               <span id="winner-score-label" class="text-xs font-bold text-emerald-900 uppercase tracking-wider">Weighted Score</span>
             </div>
             <button onclick="downloadJsonReport()"
@@ -1707,21 +1704,17 @@
     }
 
     function downloadJsonReport() {
-      const sampleReport = {
       const dataToExport = currentReport || {
         product: "ArticleCompare AI",
         winner: "B",
         overallScores: { A: 78, B: 85 },
-        recommendation: "Adopt Draft B as primary narrative foundation."
+        recommendation: "Adopt Draft B as primary narrative foundation.",
         message: "No live evaluation report in state. Run a comparison to generate complete JSON data."
       };
-      const blob = new Blob([JSON.stringify(sampleReport, null, 2)], { type: "application/json" });
-
       const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = "ArticleCompare-Report.json";
       a.download = `ArticleCompare-Evaluation-${new Date().toISOString().slice(0, 10)}.json`;
       document.body.appendChild(a);
       a.click();
