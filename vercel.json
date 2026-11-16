@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "functions": {
+    "api/compare.js": {
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    { "source": "/api/compare", "destination": "/api/compare.js" },
+    { "source": "/(.*)", "destination": "/$1" }
+  ]
+}

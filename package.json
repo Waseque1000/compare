@@ -1,0 +1,19 @@
+{
+  "name": "articlecompare-ai",
+  "version": "1.0.0",
+  "description": "ArticleCompare AI - Editorial Decision-Support & Rubric Engine",
+  "scripts": {
+    "dev": "node server.js",
+    "dev:gallery": "cd ui-ux-pro-max-skill/gallery && npm run dev",
+    "preview": "node server.js"
+  },
+  "keywords": [
+    "nextjs",
+    "ai",
+    "editorial",
+    "seo",
+    "comparison"
+  ],
+  "author": "",
+  "license": "MIT"
+}

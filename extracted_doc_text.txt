@@ -1,0 +1,3150 @@
+﻿
+
+
+ARTICLECOMPARE AI
+
+Complete Project Documentation
+
+Product • Requirements • Architecture • API • AI • UX • Security • QA • Deployment
+
+
+Technology baseline: Next.js App Router | JavaScript/JSX | Tailwind CSS | OpenAI and/or Google Gemini | No database
+
+
+
+ArticleCompare AI — Documentation Pack
+**Product:** ArticleCompare AI
+**Document set:** Product, engineering, AI, UX, quality, security and operations
+**Baseline:** Next.js App Router, JavaScript/JSX, Tailwind CSS, OpenAI + Google Gemini
+**Comparison capacity:** 2–4 articles per comparison
+
+
+1. Purpose
+ArticleCompare AI helps editors, SEO specialists, content teams and website owners compare multiple drafts before publication. It evaluates articles against a shared rubric, identifies strengths and weaknesses, highlights content gaps, recommends improvements and produces a defensible editorial recommendation.
+It is an editorial decision-support product. It does **not** predict Google/Bing rankings, establish factual truth without evidence, or replace human editorial judgment.
+
+
+2. Documentation map
+| File | Purpose |
+|---|---|
+| `01-PRD.md` | Product vision, users, scope, requirements and success metrics |
+| `02-SRS.md` | Functional and non-functional software requirements |
+| `03-Architecture.md` | System architecture, modules, flows and technical decisions |
+| Database | Not required for this project MVP; no database schema or ORM |
+| `05-API-Specification.md` | API contracts, request/response examples and errors |
+| `06-AI-Analysis-Engine.md` | Provider abstraction, prompts, scoring rubric and output validation |
+| `07-UI-UX-Specification.md` | Screens, interaction patterns, states and accessibility |
+| `08-Security-Privacy.md` | Threat model, data handling and security requirements |
+| `09-Testing-QA-Plan.md` | Test strategy, test cases and release gates |
+| `10-Deployment-Operations.md` | Environments, deployment, observability and recovery |
+| `11-Development-Roadmap.md` | Phases, milestones, dependencies and acceptance criteria |
+| `12-Project-Structure-ADR.md` | Proposed folder structure and architecture decisions |
+| `13-Glossary-and-Open-Decisions.md` | Terms, assumptions and decisions to confirm |
+
+
+3. Current starter baseline
+The existing starter contains:
+
+
+Next.js 15 App Router with JavaScript/JSX.
+
+
+A single comparison screen in `app/page.jsx`.
+
+
+`POST /api/compare` in `app/api/compare/route.js`.
+
+
+OpenAI and Gemini provider calls in the route handler.
+
+
+A prompt builder in `lib/prompt.js`.
+
+
+Paste input and TXT/Markdown upload support.
+
+
+2–4 articles per comparison.
+
+
+100-character minimum and 60,000-character maximum per article in the current route.
+
+
+JSON report export.
+The starter does not include authentication, database persistence, URL extraction, PDF/DOCX parsing, team workspaces, billing, admin management or production-grade rate limiting. The MVP is intentionally database-free.
+
+
+4. Product decisions used in this documentation
+These are proposed defaults so implementation can proceed. Confirm them before a production build:
+
+
+Product name: ArticleCompare AI (working name).
+
+
+Language: JavaScript/JSX only; do not introduce TypeScript/TSX.
+
+
+Frontend and backend: one modular Next.js application initially (modular monolith).
+
+
+Styling: Tailwind CSS; Lucide icons.
+
+
+AI: provider adapter supporting OpenAI and Gemini; user can select provider where enabled.
+
+
+Inputs: 2–4 articles, pasted text and TXT/Markdown files in MVP.
+
+
+Persistence: no database or account system. Current comparison results remain in application state; optional browser-only history may use localStorage.
+
+
+Scoring: transparent editorial rubric, not a search-engine ranking prediction.
+
+
+Reports: structured JSON internally; human-readable report UI and export.
+10. Human decision: system recommends; editor makes the final publish decision.
+
+
+5. Source-of-truth rule
+If this documentation conflicts with the existing starter code, treat:
+
+
+Existing behavior as the current implementation.
+
+
+This documentation as the target specification.
+
+
+The roadmap as the sequence for bringing implementation into alignment.
+Do not assume a planned feature exists merely because it is documented.
+
+
+
+01 — Product Requirements Document (PRD)
+
+
+1. Product overview
+ArticleCompare AI is an AI-assisted editorial evaluation platform. A user submits two, three or four article drafts and supplies optional context such as target keyword, search intent, audience and publication goal. The platform evaluates each article independently and comparatively, then produces a structured report.
+The product should answer:
+
+
+Which article is strongest for the stated purpose?
+
+
+What evidence in the submitted text supports that recommendation?
+
+
+What does each article do better or worse?
+
+
+What important topics, explanations or examples are missing?
+
+
+Can a stronger final article be produced by combining selected strengths?
+
+
+What should the editor fix before publication?
+
+
+2. Problem statement
+Editors often compare drafts manually across separate documents. This is slow and inconsistent. Generic AI writing tools may rewrite text without explaining why one draft is better, may overvalue length, and may make unsupported claims about SEO or factual accuracy.
+ArticleCompare AI provides a repeatable comparison framework, explicit scoring criteria, evidence-based explanations and actionable next steps.
+
+
+3. Vision
+Become a trusted editorial decision workspace that helps content teams select, improve and prepare high-quality articles before publication.
+
+
+4. Target users
+
+
+Primary personas
+
+
+**Content editor:** Compares drafts from writers and chooses the best version.
+
+
+**SEO specialist:** Checks intent coverage, headings, topical depth and metadata.
+
+
+**Website owner/blogger:** Evaluates content before publishing.
+
+
+**Content writer:** Learns how to improve a draft from specific feedback.
+
+
+**Agency/team lead:** Reviews multiple deliverables and standardizes quality.
+
+
+User needs
+
+
+Fast comparison of 2–4 drafts.
+
+
+Fair evaluation using the same rubric.
+
+
+Clear reasons behind scores and winner selection.
+
+
+Identification of content gaps and factual claims needing verification.
+
+
+Exportable reports for clients or team members.
+
+
+Consistent results across AI providers.
+
+
+5. Goals
+
+
+Reduce time spent manually comparing article drafts.
+
+
+Make editorial review more consistent and explainable.
+
+
+Identify meaningful content gaps and weak explanations.
+
+
+Help users create a better final article from the strongest material.
+
+
+Support multiple AI providers without coupling the product to one vendor.
+
+
+6. Non-goals
+The platform will not:
+
+
+Guarantee Google or Bing rankings.
+
+
+Produce actual keyword volume or difficulty unless connected to a trusted data provider.
+
+
+Claim a fact is verified unless it has been checked against cited sources.
+
+
+Replace plagiarism detection services unless a dedicated similarity engine is integrated.
+
+
+Publish directly to a CMS in the MVP.
+
+
+Automatically determine legal, medical or financial correctness.
+
+
+Treat longer content as automatically better.
+
+
+7. Core user journey
+
+
+User opens a new comparison.
+
+
+User chooses 2, 3 or 4 article slots.
+
+
+User enters a title and content or uploads a supported file.
+
+
+User optionally enters primary keyword, search intent, target audience, language, tone and editorial goal.
+
+
+User chooses an AI provider/model or uses the configured default.
+
+
+User submits the comparison.
+
+
+Server validates inputs and creates a normalized analysis request.
+
+
+AI engine evaluates all articles with one shared rubric.
+
+
+Server validates the model's structured response.
+10. UI displays executive summary, winner, score matrix, article-level reviews, shared gaps and improvement plan.
+11. User can inspect evidence, edit inputs, rerun analysis and export the report.
+
+
+8. Functional scope
+
+
+MVP (first usable release)
+
+
+Compare 2–4 articles.
+
+
+Add title and pasted content.
+
+
+Upload `.txt` and `.md`.
+
+
+Optional comparison context.
+
+
+OpenAI and Gemini provider selection through server-side configuration.
+
+
+Individual article scoring.
+
+
+Comparison matrix.
+
+
+Winner recommendation with confidence and rationale.
+
+
+Strengths, weaknesses, content gaps and editorial issues.
+
+
+Shared gaps and prioritized improvements.
+
+
+Suggested SEO title, meta description, slug, keyword themes and FAQ ideas.
+
+
+JSON report export.
+
+
+Responsive interface.
+
+
+Input validation and user-friendly error states.
+
+
+Release 1.1
+
+
+Optionally save comparison history in the user’s browser using localStorage; no server-side storage.
+
+
+Copy report sections.
+
+
+Re-run one comparison with changed context.
+
+
+Side-by-side article viewer.
+
+
+More robust provider timeout/retry handling.
+
+
+Markdown export.
+
+
+Release 2
+
+
+User authentication.
+
+
+No database or ORM.
+
+
+Comparison history and projects.
+
+
+PDF/DOCX import.
+
+
+URL import with safe extraction.
+
+
+Shareable read-only reports.
+
+
+Admin usage dashboard and quotas.
+
+
+Release 3
+
+
+Team workspaces and roles.
+
+
+Evidence-based web research/fact-check mode.
+
+
+Paragraph-level mapping and highlighted evidence.
+
+
+Improved final-draft workspace.
+
+
+CMS integrations.
+
+
+Usage plans and billing, if commercially required.
+
+
+9. Scoring dimensions
+Each article is scored 0–100 across the same dimensions:
+
+
+Search-intent satisfaction.
+
+
+Accuracy and evidence quality (limited to what can be assessed from supplied text).
+
+
+Depth and completeness.
+
+
+Readability and audience fit.
+
+
+Structure and scannability.
+
+
+Originality and differentiation.
+
+
+Practical examples and usefulness.
+
+
+On-page SEO fundamentals.
+
+
+Topical coverage.
+10. Publication readiness.
+Scores must be explained with text-based evidence. The system must not claim search-volume, keyword-difficulty, backlink or ranking data unless a corresponding data source is integrated.
+
+
+10. Product principles
+
+
+Evidence over vague opinions.
+
+
+Fairness: apply the same rubric to every submitted article.
+
+
+Transparency: explain scoring and uncertainty.
+
+
+User control: editor owns the final decision.
+
+
+Provider independence: analysis logic is not tied to one AI vendor.
+
+
+Privacy: article content is treated as user-provided potentially confidential material.
+
+
+Clarity: distinguish text-only evaluation from externally verified facts.
+
+
+11. Success metrics
+
+
+Product metrics
+
+
+Comparison completion rate.
+
+
+Median time from submission to report.
+
+
+Report export rate.
+
+
+Repeat comparison rate.
+
+
+Percentage of reports with a selected winner or justified tie/no-winner.
+
+
+User rating of usefulness.
+
+
+Quality metrics
+
+
+Schema-valid AI response rate.
+
+
+Retry rate by provider.
+
+
+Human agreement with winner recommendation.
+
+
+Score consistency across repeated runs.
+
+
+Percentage of recommendations containing identifiable article evidence.
+
+
+False factual-verification claim rate (target: zero).
+
+
+Operational metrics
+
+
+Provider error rate.
+
+
+Cost per comparison.
+
+
+Token usage per report.
+
+
+API latency p50/p95.
+
+
+Rate-limit incidents.
+
+
+Failed import rate.
+
+
+12. MVP acceptance criteria
+A release is MVP-ready when:
+
+
+A user can submit 2–4 articles.
+
+
+Every article is validated before provider calls.
+
+
+Both supported providers can be configured and called securely.
+
+
+A valid report is rendered from validated structured JSON.
+
+
+The report includes scores for every submitted article and all rubric dimensions.
+
+
+The report does not invent keyword metrics or ranking guarantees.
+
+
+Provider errors, malformed JSON and invalid inputs are handled gracefully.
+
+
+API secrets are never exposed to client code.
+
+
+The interface works on mobile and desktop.
+
+
+Core flows pass the QA plan.
+
+
+
+02 — Software Requirements Specification (SRS)
+
+
+1. System context
+ArticleCompare AI is a database-free web application. The browser communicates with Next.js server endpoints. The server validates requests, invokes an AI provider adapter and returns a normalized comparison report. No user accounts or server-side history are required.
+
+
+2. User roles
+
+
+MVP
+
+
+Anonymous user: can create a comparison in the current session.
+
+
+No persistent account or team role is required in the MVP.
+
+
+Production target
+
+
+Guest: limited trial access, if enabled.
+
+
+Member: create, view, edit metadata and delete own comparisons.
+
+
+Team member: access assigned team workspace and reports.
+
+
+Team admin: manage members and team settings.
+
+
+Platform admin: manage provider configuration, quotas, abuse reports and system health.
+No user authorization or ownership model is required because the MVP has no accounts or persistent user records.
+
+
+3. Functional requirements
+
+
+FR-001 — Create comparison
+The system shall allow a user to start a comparison with 2, 3 or 4 articles.
+
+
+FR-002 — Article input
+Each article shall support a title and body. The body may be pasted into a text editor or imported from a supported file.
+
+
+FR-003 — Input limits
+The current starter enforces at least 100 characters and no more than 60,000 characters per article. Production limits shall be configurable by plan and provider token budget.
+
+
+FR-004 — Context fields
+The system shall support optional:
+
+
+Primary keyword.
+
+
+Search intent.
+
+
+Target audience.
+
+
+Editorial goal.
+
+
+Content language.
+
+
+Tone/style.
+
+
+Content type.
+
+
+Target market/region.
+
+
+Brand or publication guidelines.
+
+
+FR-005 — Provider selection
+The system shall support OpenAI and Gemini through a provider abstraction. Provider/model selection shall be validated against server-side configuration.
+
+
+FR-006 — Comparison analysis
+The system shall analyze each article using an identical rubric and generate an overall score, dimension scores and evidence-based explanations.
+
+
+FR-007 — Winner recommendation
+The system shall recommend a winner only when the evidence supports a defensible recommendation. It may report a tie or no clear winner.
+
+
+FR-008 — Content gap analysis
+The system shall identify missing topics, explanations, examples, definitions and user questions. It shall distinguish shared gaps from article-specific gaps.
+
+
+FR-009 — Editorial recommendations
+The system shall produce prioritized improvements with priority, action and reason.
+
+
+FR-010 — SEO recommendations
+The system shall propose metadata and keyword themes without inventing external metrics.
+
+
+FR-011 — Report display
+The system shall display executive summary, winner, comparison matrix, article reviews, shared gaps, improvement plan, SEO suggestions and limitations.
+
+
+FR-012 — Export
+The MVP shall export a structured JSON report. Later versions may support PDF, DOCX and Markdown.
+
+
+FR-013 — Error handling
+The system shall show actionable errors for invalid inputs, provider failures, timeouts, rate limits and malformed provider responses.
+
+
+FR-014 — Browser-local history (optional)
+The client may save and manage comparison summaries in localStorage. No server-side persistence or account system is required.
+
+
+FR-015 — URL/file import (future)
+The system shall extract readable article text from supported formats and show the extracted text for user review before analysis.
+
+
+4. Non-functional requirements
+
+
+NFR-001 Performance
+
+
+UI should remain responsive while analysis runs.
+
+
+Show progress/loading state and prevent duplicate submissions.
+
+
+Target API response time depends on provider; measure p50 and p95 rather than promising a fixed AI latency.
+
+
+For long jobs, move to asynchronous job processing rather than holding a single request open.
+
+
+NFR-002 Reliability
+
+
+Provider adapter shall normalize provider errors.
+
+
+Retry only transient failures with bounded exponential backoff.
+
+
+Do not automatically retry non-retryable validation or authentication failures.
+
+
+Preserve user input if analysis fails.
+
+
+NFR-003 Security
+
+
+Keep provider keys server-side.
+
+
+Validate and sanitize inputs.
+
+
+Add rate limiting, request-size limits and abuse controls before public launch.
+
+
+Do not expose persistent user records; the MVP does not store user records on the server.
+
+
+Protect imports against SSRF and malicious files.
+
+
+NFR-004 Privacy
+
+
+Disclose whether content is sent to OpenAI or Google.
+
+
+Do not store article text longer than needed unless the user chooses to save it.
+
+
+Provide deletion controls for saved comparisons.
+
+
+Define retention and backup policies before production.
+
+
+NFR-005 Accessibility
+
+
+Aim for WCAG 2.2 AA.
+
+
+Keyboard-accessible inputs, dialogs and report controls.
+
+
+Visible focus states and semantic headings.
+
+
+Do not communicate scores by color alone.
+
+
+NFR-006 Maintainability
+
+
+Separate UI, validation, provider adapters, prompts, scoring and browser-local history utilities.
+
+
+Use shared schemas and typed-by-contract validation (JavaScript with Zod is acceptable).
+
+
+Keep provider-specific code out of UI components.
+
+
+NFR-007 Compatibility
+
+
+Support current evergreen Chrome, Edge, Firefox and Safari.
+
+
+Responsive layouts for mobile, tablet and desktop.
+
+
+NFR-008 Observability
+
+
+Log request ID, provider, model, duration, status and token/cost metadata where available.
+
+
+Do not log full article text or API keys.
+
+
+Track errors and latency.
+
+
+5. Constraints
+
+
+The project uses JavaScript/JSX, not TypeScript/TSX.
+
+
+The initial app is a Next.js modular monolith.
+
+
+AI output is probabilistic and must be schema-validated.
+
+
+Provider models and API capabilities can change; keep model names configurable.
+
+
+External SEO metrics require separate integrations.
+
+
+6. Data validation rules
+
+
+Article count: 2–4.
+
+
+Title: optional in current starter; recommended maximum 200 characters.
+
+
+Body: minimum 100 characters; current maximum 60,000 characters per article.
+
+
+Trim leading/trailing whitespace.
+
+
+Reject empty content and unsupported file types.
+
+
+Limit total request size and total tokens.
+
+
+Limit context field lengths.
+
+
+Reject unsupported provider identifiers.
+
+
+Normalize article IDs to stable A/B/C/D labels for report mapping.
+
+
+7. Business rules
+
+
+All submitted articles are evaluated against the same criteria.
+
+
+Do not compare an article's raw score to an unrelated comparison as if scores were globally calibrated.
+
+
+A score is an editorial estimate, not an objective measurement.
+
+
+The overall score calculation must be documented and versioned.
+
+
+A winner requires rationale and confidence.
+
+
+If scores are close or evidence is insufficient, return `winner: null` or a tie recommendation.
+
+
+A model must not claim it browsed or fact-checked unless the application actually ran a research step.
+
+
+
+03 — System Architecture
+
+
+1. Recommended architecture
+Use a **modular monolith** for the first production version. Keep one Next.js application and separate domain modules internally. This avoids premature microservices while allowing modules to be extracted later if scale requires it.
+
+
+High-level components
+flowchart TD  U[User / Browser] --&gt; UI[Next.js UI]  UI --&gt; API[Next.js Route Handlers]  API --&gt; VAL[Request Validation]  VAL --&gt; ORCH[Comparison Orchestrator]    ORCH --&gt; PRE[Text Normalization]  PRE --&gt; PROMPT[Prompt Builder]  PROMPT --&gt; ADAPTER[AI Provider Adapter]  ADAPTER --&gt; OAI[OpenAI API]  ADAPTER --&gt; GEM[Gemini API]  ORCH --&gt; PARSE[Response Parser + Schema Validation]  PARSE --&gt; REPORT[Report Normalizer]  REPORT --&gt; UI  REPORT --&gt; UI
+
+
+2. Main modules
+
+
+**Presentation:** pages, layouts, reusable components and client state.
+
+
+**Comparison domain:** comparison creation, article normalization and business rules.
+
+
+**AI orchestration:** provider selection, model configuration, prompt versions and execution.
+
+
+**Provider adapters:** OpenAI and Gemini request/response mapping.
+
+
+**Report domain:** response validation, score normalization, winner logic and export.
+
+
+**Import pipeline:** TXT/Markdown first; URL/PDF/DOCX later.
+
+
+**Identity and access:** no user accounts, authentication, or roles in the MVP.
+
+
+**Persistence:** no server-side persistence. Optional comparison history is stored in browser localStorage.
+
+
+**Observability:** structured logs, metrics and error tracking.
+
+
+3. Request lifecycle
+
+
+Browser submits article data and context to `POST /api/compare`.
+
+
+Route handler parses JSON and applies request validation.
+
+
+Server checks provider configuration and usage policy.
+
+
+Text normalizer trims content and assigns stable article IDs.
+
+
+Prompt builder creates a versioned comparison instruction.
+
+
+Provider adapter sends request to selected AI provider.
+
+
+Provider response is parsed and validated against the report schema.
+
+
+Report normalizer checks all article IDs and scoring dimensions.
+
+
+Route returns a normalized report.
+10. UI renders report sections and allows export.
+
+
+4. Provider abstraction
+Use a common interface:
+// Conceptual contractexport async function generateComparison({  provider,  model,  systemPrompt,  userPrompt,  responseSchema,  timeoutMs}) {  // Select provider adapter and return normalized JSON.}
+Provider adapters should own:
+
+
+Authentication header/key handling.
+
+
+Provider endpoint and request body.
+
+
+Structured-output configuration.
+
+
+Response extraction.
+
+
+Provider error normalization.
+
+
+Usage metadata extraction where available.
+Business logic must not depend on provider-specific response shapes.
+
+
+5. Synchronous vs asynchronous processing
+
+
+MVP
+Synchronous request is acceptable for short inputs and limited concurrency. Add a timeout and clear loading state.
+
+
+Production
+Use a job model for long comparisons:
+
+
+Create comparison record with `QUEUED` status.
+
+
+Enqueue job.
+
+
+Worker executes analysis.
+
+
+Store normalized report.
+
+
+UI polls or subscribes for status.
+
+
+Support cancellation where feasible.
+A queue such as BullMQ + Redis is optional, not required for the initial MVP. Do not add it until long-running workload justifies it.
+
+
+6. Scalability approach
+
+
+Enforce article count, per-article length and total token budget.
+
+
+Use request IDs and idempotency keys for retries.
+
+
+Add provider concurrency limits.
+
+
+Cache only when privacy and input identity rules are clear.
+
+
+Keep report payloads versioned.
+
+
+Move file parsing and URL extraction to isolated services if they become resource-intensive.
+
+
+7. Failure handling
+
+
+Invalid request: return 400.
+
+
+Unauthenticated request (when auth is enabled): 401.
+
+
+Unauthorized resource: 403 or 404 according to disclosure policy.
+
+
+Provider quota/rate limit: normalized 429 or 503 with safe message.
+
+
+Provider timeout: 504.
+
+
+Provider unavailable: 502/503.
+
+
+Invalid AI JSON: retry once with repair prompt if safe; otherwise return controlled error.
+
+
+Do not store raw provider responses or article content on the server. Keep processing transient and return the normalized report to the browser.
+
+
+8. Architecture quality attributes
+
+
+Modularity: provider, prompt, report and UI concerns are isolated.
+
+
+Testability: provider adapters can be mocked.
+
+
+Security: secrets remain on server.
+
+
+Extensibility: new providers can implement the adapter contract.
+
+
+Explainability: every score and winner rationale should reference observed text.
+
+
+Portability: deployment should not depend on a single provider.
+
+
+
+05 — API Specification
+
+
+1. API conventions
+
+
+Base path: `/api`
+
+
+Request/response format: JSON
+
+
+Character encoding: UTF-8
+
+
+IDs: opaque strings
+
+
+Errors: normalized JSON object
+
+
+Authentication: none in starter; session-based authentication required for saved user data in production.
+
+
+Versioning: current MVP endpoint is `/api/compare`; add `/api/v1` before a public API is offered to external clients.
+
+
+2. POST `/api/compare`
+Creates an analysis and returns a normalized comparison report.
+
+
+Request
+{  "provider": "gemini",  "articles": [    {      "id": "A",      "title": "Article A",      "content": "At least 100 characters of article content..."    },    {      "id": "B",      "title": "Article B",      "content": "At least 100 characters of article content..."    }  ],  "primaryKeyword": "cricket explained for beginners",  "searchIntent": "Informational",  "audience": "People new to cricket",  "goal": "Choose the most useful article for publication"}
+
+
+Current starter validation
+
+
+`articles` must be an array of 2–4 entries.
+
+
+Each `content` must contain at least 100 characters.
+
+
+Each `content` must be under 60,000 characters.
+
+
+`provider` must be `openai` or `gemini`, or be omitted to use configured default.
+
+
+Provider API key must exist on the server.
+Production must also validate total request size, title/context lengths, total token budget and user quota.
+
+
+Success response (shape)
+{  "provider": "gemini",  "report": {    "executiveSummary": "Summary...",    "winner": {      "articleId": "B",      "title": "Article B",      "reason": "Reason based on supplied evidence",      "confidence": "Medium"    },    "hybridRecommendation": "How to combine the best parts...",    "articles": [      {        "articleId": "A",        "title": "Article A",        "overallScore": 81,        "scores": {          "searchIntent": 85,          "accuracyEvidence": 78,          "depthCompleteness": 82,          "readability": 88,          "structure": 80,          "originality": 70,          "examples": 84,          "onPageSEO": 80,          "topicalCoverage": 83,          "publicationReadiness": 78        },        "strengths": ["Specific strength"],        "weaknesses": ["Specific weakness"],        "contentGaps": ["Missing subtopic"],        "editorialIssues": ["Issue"],        "seoSuggestions": ["Suggestion"]      }    ],    "comparisonMatrix": [      {        "criterion": "Readability",        "scores": { "A": 88, "B": 84 },        "analysis": "Comparison explanation..."      }    ],    "sharedGaps": ["Gap across multiple articles"],    "priorityImprovements": [      {        "priority": "High",        "task": "Verify the rule explanation against an authoritative source",        "reason": "The submitted text does not cite a rule source."      }    ],    "seo": {      "title": "Suggested title",      "metaDescription": "Suggested description",      "slug": "suggested-slug",      "primaryKeyword": "keyword",      "secondaryKeywords": ["related topic"],      "faqIdeas": ["Question?"]    },    "limitations": ["Editorial estimates, not ranking predictions."]  }}
+The actual report contract must include score entries for every submitted article. In a 3- or 4-article comparison, the matrix must include all article IDs.
+
+
+Error response
+{  "error": {    "code": "VALIDATION_ERROR",    "message": "Please submit between 2 and 4 articles.",    "requestId": "req_example"  }}
+
+
+Status codes
+
+
+`200`: comparison completed.
+
+
+`400`: invalid request or unsupported provider.
+
+
+`401`: authentication required (future).
+
+
+`403`: insufficient permission (future).
+
+
+`413`: request too large.
+
+
+`422`: content cannot be processed.
+
+
+`429`: application/provider rate limit.
+
+
+`502`: provider returned an invalid or failed response.
+
+
+`503`: provider unavailable or service temporarily unavailable.
+
+
+`504`: provider timeout.
+
+
+`500`: unexpected internal error.
+
+
+3. Future saved comparison endpoints
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | `/api/v1/comparisons` | Create draft comparison |
+| GET | `/api/v1/comparisons` | List user's comparisons |
+| GET | `/api/v1/comparisons/:id` | Get comparison and latest report |
+| PATCH | `/api/v1/comparisons/:id` | Update draft metadata |
+| DELETE | `/api/v1/comparisons/:id` | Delete comparison |
+| POST | `/api/v1/comparisons/:id/analyze` | Start a new analysis run |
+| GET | `/api/v1/analysis-runs/:id` | Get analysis status/result |
+| GET | `/api/v1/analysis-runs/:id/report` | Get normalized report |
+| POST | `/api/v1/import/url` | Extract text from URL |
+| POST | `/api/v1/import/file` | Parse supported document |
+| GET | `/api/v1/usage` | Get user's usage summary |
+
+
+4. Import API future contract
+
+
+URL import
+`POST /api/v1/import/url`
+{ "url": "https://example.com/article" }
+Response:
+{  "title": "Extracted title",  "canonicalUrl": "https://example.com/article",  "content": "Extracted readable text...",  "wordCount": 1250,  "warnings": []}
+Must defend against SSRF, private IP access, redirects to private networks, oversized responses, unsupported MIME types and malicious HTML.
+
+
+File import
+`POST /api/v1/import/file` using multipart form data. Allowlist MIME types/extensions and validate actual file signatures. Apply file-size and parser limits.
+
+
+5. Idempotency and concurrency
+
+
+Add `Idempotency-Key` for future asynchronous analysis creation.
+
+
+Prevent duplicate submissions from repeated button clicks.
+
+
+Limit concurrent analysis jobs per user/workspace.
+
+
+Do not expose provider-specific raw errors to end users.
+
+
+
+06 — AI Analysis Engine
+
+
+1. Purpose
+The analysis engine is the product's core. It must compare articles fairly, explain its judgment and produce machine-readable output. It must not invent external SEO metrics or claim unperformed research.
+
+
+2. Pipeline
+
+
+Validate request.
+
+
+Normalize whitespace and article labels.
+
+
+Count characters, words and estimated tokens.
+
+
+Build a comparison context.
+
+
+Select provider and model.
+
+
+Build a versioned prompt.
+
+
+Call provider with low/controlled temperature and structured output.
+
+
+Parse provider response.
+
+
+Validate response against a JSON schema.
+10. Validate article IDs, dimensions and score ranges.
+11. Apply deterministic business rules.
+12. Return normalized report and usage metadata.
+
+
+3. Scoring rubric
+Each criterion receives 0–100. Suggested weights:
+| Dimension | Weight |
+|---|---:|
+| Search-intent satisfaction | 15% |
+| Accuracy and evidence quality | 15% |
+| Depth and completeness | 12% |
+| Readability and audience fit | 10% |
+| Structure and scannability | 10% |
+| Originality and differentiation | 8% |
+| Practical examples and usefulness | 8% |
+| On-page SEO fundamentals | 8% |
+| Topical coverage | 8% |
+| Publication readiness | 6% |
+| **Total** | **100%** |
+Overall score should be computed deterministically by the application from dimension scores and weights, not trusted blindly from a model-generated `overallScore`. Round consistently to the nearest integer.
+
+
+Score interpretation
+
+
+90–100: Excellent against the stated editorial criteria.
+
+
+80–89: Strong; some improvements remain.
+
+
+70–79: Good foundation; meaningful gaps remain.
+
+
+60–69: Needs substantial editing.
+
+
+0–59: Major weaknesses for the stated goal.
+These bands are editorial guidance, not industry-standard scores.
+
+
+4. Scoring guidance
+
+
+Search intent: Does the article answer the actual question and likely follow-up needs?
+
+
+Accuracy/evidence: Are claims internally consistent and appropriately qualified? Text-only analysis cannot prove truth.
+
+
+Depth: Does it cover necessary subtopics without padding?
+
+
+Readability: Is language appropriate for the intended audience?
+
+
+Structure: Are headings logical, sections scannable and progression coherent?
+
+
+Originality: Does it add useful framing, examples or synthesis rather than generic filler?
+
+
+Examples: Are examples correct, relevant and understandable?
+
+
+On-page SEO: Are title, headings, keyword use, metadata and topical organization sensible?
+
+
+Topical coverage: Does it cover the important aspects of the topic?
+
+
+Publication readiness: Are there unresolved errors, unsupported claims, awkward phrasing or missing elements?
+
+
+5. Winner decision
+Do not automatically select the highest numeric score.
+Proposed rule:
+
+
+If top two overall scores differ by 5 or more points and no critical weakness undermines the leader, recommend the higher score.
+
+
+If the difference is under 5, mark the result as close and explain trade-offs.
+
+
+If all articles have serious limitations, return no clear winner and recommend a revision.
+
+
+If one article has a critical factual/safety concern, flag it even if its score is high.
+
+
+Confidence must reflect evidence quality, not model certainty alone.
+The 5-point threshold is a product default and should be calibrated through human review.
+
+
+6. Evidence requirements
+Every major strength, weakness and recommendation should reference:
+
+
+Article label.
+
+
+Relevant heading or section, when identifiable.
+
+
+Short excerpt or faithful paraphrase.
+
+
+Why it matters.
+Avoid fabricated quotes. For long content, the UI may link to the source paragraph using stored offsets or section IDs.
+
+
+7. Structured output schema concept
+Required top-level fields:
+
+
+`executiveSummary`
+
+
+`winner`
+
+
+`hybridRecommendation`
+
+
+`articles`
+
+
+`comparisonMatrix`
+
+
+`sharedGaps`
+
+
+`priorityImprovements`
+
+
+`seo`
+
+
+`limitations`
+Use a formal JSON Schema/Zod validator in implementation. Validate:
+
+
+Scores are integers 0–100.
+
+
+Every submitted article appears exactly once.
+
+
+Every score matrix row has all submitted article IDs.
+
+
+Winner ID exists or is null.
+
+
+Priority is High/Medium/Low.
+
+
+Arrays and strings have sensible maximum lengths.
+
+
+Unknown fields are rejected or stripped consistently.
+
+
+8. Prompt design rules
+System instruction should tell the model:
+
+
+Act as a senior editor and SEO strategist.
+
+
+Apply the same rubric to every article.
+
+
+Do not reward length alone.
+
+
+Use only supplied content unless research mode is enabled.
+
+
+Distinguish evidence from inference.
+
+
+Never invent search volumes, keyword difficulty, backlinks, rankings or citations.
+
+
+Never claim external fact-checking occurred unless it did.
+
+
+Return JSON matching the required schema.
+
+
+9. Provider abstraction
+Suggested module interface:
+export async function runProvider({  provider,  model,  prompt,  responseSchema,  timeoutMs}) {  // Returns:  // { data, usage, provider, model, durationMs }}
+Provider adapters:
+
+
+`openai.adapter.js`
+
+
+`gemini.adapter.js`
+Shared services:
+
+
+`prompt-builder.js`
+
+
+`report-schema.js`
+
+
+`report-validator.js`
+
+
+`score-calculator.js`
+
+
+`winner-selector.js`
+
+
+10. Cost and token controls
+
+
+Estimate tokens before provider request.
+
+
+Enforce per-article and total token budgets.
+
+
+Provide model selection only from server allowlist.
+
+
+Track provider usage where returned.
+
+
+Warn users before expensive large-document analysis.
+
+
+Use truncation only with clear notice; prefer rejecting or chunking rather than silently dropping text.
+
+
+If chunking is implemented, preserve section context and run a final synthesis step.
+
+
+Do not assume two providers have equal cost, context window or output behavior.
+
+
+11. Evaluation and calibration
+Create a human-reviewed benchmark set containing:
+
+
+Clear winner cases.
+
+
+Near-tie cases.
+
+
+Articles with different strengths.
+
+
+Short but excellent vs long but padded examples.
+
+
+Articles with unsupported factual claims.
+
+
+Articles with SEO stuffing.
+
+
+Articles with missing user intent.
+
+
+2-, 3- and 4-article comparisons.
+Measure:
+
+
+Human/editor agreement with winner.
+
+
+Score variance across repeated runs.
+
+
+Evidence traceability.
+
+
+Schema-valid response rate.
+
+
+Hallucination/unsupported claim rate.
+
+
+Provider consistency.
+Version prompts and scoring weights. A prompt change should trigger regression tests.
+
+
+
+07 — UI/UX Specification
+
+
+1. Design direction
+**Visual identity:** Blue / White / Enterprise
+**Personality:** Clear, analytical, trustworthy, calm and productive
+**Primary experience:** Editorial comparison workspace, not a generic chatbot.
+Use a light-first interface with a restrained blue primary color, neutral backgrounds, clear borders and subtle shadows. Use semantic status colors sparingly. Avoid excessive gradients, oversized cards and decorative animation.
+
+
+2. Main navigation
+MVP:
+
+
+New Comparison
+
+
+How It Works
+
+
+Settings (provider configuration status, if appropriate)
+Production:
+
+
+Dashboard
+
+
+Comparisons
+
+
+Projects
+
+
+Team Workspace
+
+
+Usage
+
+
+Settings
+
+
+Admin (authorized admins only)
+
+
+3. Screen inventory
+
+
+Screen A — Landing / Dashboard
+
+
+Product name and value proposition.
+
+
+Primary CTA: New Comparison.
+
+
+Recent comparisons (production).
+
+
+Usage information (production).
+
+
+Short explanation of comparison workflow.
+
+
+Screen B — New Comparison workspace
+
+
+Comparison title.
+
+
+Article count selector: 2, 3 or 4.
+
+
+Article cards/tabs.
+
+
+Title input per article.
+
+
+Content editor per article.
+
+
+Import TXT/Markdown.
+
+
+Optional context panel.
+
+
+Provider/model selector.
+
+
+Character/word count.
+
+
+Analyze button.
+
+
+Validation messages.
+
+
+Screen C — Analysis loading
+
+
+Clear status message.
+
+
+Progress steps: validating, analyzing, preparing report.
+
+
+Do not fake exact percentage if provider does not expose progress.
+
+
+Allow cancellation only if backend supports it.
+
+
+Preserve entered text.
+
+
+Screen D — Results overview
+
+
+Executive summary.
+
+
+Winner recommendation or no-clear-winner state.
+
+
+Confidence.
+
+
+Overall score comparison.
+
+
+Comparison matrix.
+
+
+Hybrid recommendation.
+
+
+Export action.
+
+
+Screen E — Article detail
+
+
+Article title and score.
+
+
+Dimension scores.
+
+
+Strengths.
+
+
+Weaknesses.
+
+
+Content gaps.
+
+
+Editorial issues.
+
+
+SEO suggestions.
+
+
+Evidence excerpts/section references.
+
+
+Screen F — Improvement plan
+
+
+Priority, task and reason.
+
+
+Checkbox state is held in browser state; no server persistence.
+
+
+Suggested SEO metadata.
+
+
+FAQ ideas.
+
+
+Screen G — History / Project (future)
+
+
+Search, filter and sort comparisons.
+
+
+Open report.
+
+
+Duplicate comparison.
+
+
+Delete comparison.
+
+
+Group by project.
+
+
+4. Comparison workspace behavior
+
+
+Start with two article slots.
+
+
+Add Article C and D using explicit controls.
+
+
+Each article has a clear label A/B/C/D.
+
+
+Support paste and file upload.
+
+
+Show accepted file formats and limits.
+
+
+Do not silently replace text when uploading.
+
+
+Warn before removing an article with content.
+
+
+Keep optional context collapsed by default but discoverable.
+
+
+Show the provider and model that will be used.
+
+
+Disable submit until validation passes.
+
+
+Prevent duplicate submissions.
+
+
+5. Results information hierarchy
+
+
+Executive recommendation.
+
+
+Winner / tie / no clear winner.
+
+
+Score comparison.
+
+
+Comparison matrix.
+
+
+Article-by-article details.
+
+
+Shared content gaps.
+
+
+Prioritized improvement plan.
+
+
+SEO suggestions.
+
+
+Limitations and verification warnings.
+
+
+6. Data visualization
+Use:
+
+
+Horizontal bars for dimension scores.
+
+
+Table/matrix for cross-article comparisons.
+
+
+Neutral visual treatment for close scores.
+
+
+A distinct but restrained winner indicator.
+
+
+Text labels and accessible values in addition to color.
+Do not imply a score is a probability of ranking.
+
+
+7. Responsive behavior
+Desktop:
+
+
+Side-by-side article inputs where space allows.
+
+
+Results matrix with sticky labels if needed.
+Tablet:
+
+
+Two-column article cards or tabs.
+
+
+Horizontally scrollable comparison matrix with accessible labels.
+Mobile:
+
+
+Single-column article inputs.
+
+
+Article tabs or accordion.
+
+
+Stacked score summaries.
+
+
+Horizontally scrollable matrix with clear scroll affordance.
+
+
+Sticky analyze button only if it does not obscure content.
+
+
+8. Interaction states
+Every interactive component must define:
+
+
+Default.
+
+
+Hover.
+
+
+Focus.
+
+
+Active.
+
+
+Disabled.
+
+
+Loading.
+
+
+Error.
+
+
+Success.
+Important states:
+
+
+Empty article slot.
+
+
+Invalid/too-short article.
+
+
+File parsing error.
+
+
+Provider not configured.
+
+
+Analysis in progress.
+
+
+Provider timeout.
+
+
+Invalid AI response.
+
+
+No clear winner.
+
+
+Successful report.
+
+
+Export completed.
+
+
+9. Accessibility
+
+
+Semantic heading hierarchy.
+
+
+Labels associated with inputs.
+
+
+Keyboard navigation and visible focus.
+
+
+Accessible dialog behavior.
+
+
+Contrast meeting WCAG 2.2 AA.
+
+
+Score charts must have text alternatives.
+
+
+Do not use color alone to communicate winner or status.
+
+
+Respect reduced-motion preference.
+
+
+10. Content design
+Prefer concise labels:
+
+
+“Article A”
+
+
+“Add article”
+
+
+“Primary keyword”
+
+
+“Search intent”
+
+
+“Target audience”
+
+
+“Editorial goal”
+
+
+“Compare articles”
+
+
+“No clear winner”
+
+
+“Why this article scored higher”
+
+
+“Needs factual verification”
+Avoid claims such as “Google ranking score” unless an actual ranking dataset integration exists.
+
+
+
+08 — Security and Privacy Requirements
+
+
+1. Security principles
+
+
+Secrets remain server-side.
+
+
+Least privilege for users and services.
+
+
+Validate all external input.
+
+
+Treat uploaded text, files and URLs as untrusted.
+
+
+Avoid logging article content by default.
+
+
+Apply ownership checks to all saved resources.
+
+
+Fail safely and expose minimal provider error details.
+
+
+2. API key management
+
+
+Store OpenAI and Gemini keys in environment variables or a managed secret store.
+
+
+Never use `NEXT_PUBLIC_` for provider secrets.
+
+
+Never return keys in API responses.
+
+
+Never commit `.env.local`.
+
+
+Rotate keys if exposed.
+
+
+Use separate keys/projects for development and production.
+
+
+Restrict provider usage and set billing alerts where supported.
+
+
+3. Input and request protection
+
+
+Enforce body-size limits at proxy and application layers.
+
+
+Enforce article count, character and token limits.
+
+
+Validate provider/model against an allowlist.
+
+
+Normalize text without executing markup or scripts.
+
+
+Render user content as text, not trusted HTML.
+
+
+Sanitize Markdown rendering if HTML is allowed.
+
+
+Apply rate limits per IP and authenticated user.
+
+
+Add abuse detection and quotas before public launch.
+
+
+4. File upload security
+
+
+Allowlist extensions and MIME types.
+
+
+Verify file signatures rather than trusting extension alone.
+
+
+Limit file size, pages and extracted text.
+
+
+Reject executable or unexpected file types.
+
+
+Parse files in a constrained environment.
+
+
+Avoid storing uploaded files indefinitely.
+
+
+Scan files where appropriate.
+
+
+Prevent archive bombs and parser resource exhaustion.
+
+
+5. URL import security (future)
+URL import creates SSRF risk. Requirements:
+
+
+Accept only HTTP/HTTPS.
+
+
+Block localhost, private, link-local and reserved IP ranges.
+
+
+Resolve DNS and validate every redirect target.
+
+
+Revalidate after redirects and DNS changes.
+
+
+Block access to cloud metadata endpoints.
+
+
+Limit redirects, response size and timeout.
+
+
+Allow only expected content types.
+
+
+Do not forward internal cookies or credentials.
+
+
+Run extraction in a controlled server environment.
+
+
+6. Authentication and authorization (future)
+
+
+Use a maintained authentication solution.
+
+
+Store secure, HTTP-only, same-site cookies.
+
+
+Apply CSRF protections where needed.
+
+
+Verify workspace membership and role server-side.
+
+
+Ensure users cannot access another user's comparison by changing an ID.
+
+
+Use 404 or 403 consistently according to resource-disclosure policy.
+
+
+Rate-limit login, reset and invitation flows.
+
+
+7. AI prompt injection and untrusted content
+Submitted article text may contain instructions intended to manipulate the model. Treat article bodies as data, not instructions.
+
+
+Delimit article content clearly.
+
+
+Tell the model to ignore instructions embedded in submitted articles.
+
+
+Never allow article text to override system evaluation rules.
+
+
+Do not execute generated code or tool calls from article content.
+
+
+If research tools are added, require explicit allowlisted tools and validated arguments.
+
+
+Validate output before rendering.
+
+
+8. Privacy and retention
+Before public launch, publish a privacy notice explaining:
+
+
+Which article content is sent to the selected AI provider.
+
+
+Whether comparisons are saved.
+
+
+Retention period.
+
+
+How to delete comparisons and accounts.
+
+
+Whether data is used for analytics.
+
+
+Which subprocessors are involved.
+Default recommendation:
+
+
+Do not persist anonymous article content.
+
+
+Do not persist article content on the server. Optional saved history is browser-local only.
+
+
+Provide deletion for saved comparisons.
+
+
+Avoid storing full prompts/provider responses in application logs.
+
+
+Define backup deletion/expiry behavior.
+
+
+9. Threat model
+| Threat | Mitigation |
+|---|---|
+| API key leakage | Server-only secrets, secret manager, no client exposure |
+| Cost abuse | Authentication, quotas, rate limits, token limits |
+| Prompt injection | Treat articles as untrusted data, fixed system prompt |
+| XSS | Escape output, sanitize rich text, safe Markdown |
+| SSRF from URL import | URL/IP/redirect validation and network restrictions |
+| Malicious file | Allowlist, signature checks, size limits, isolated parsing |
+| IDOR | Server-side ownership and workspace checks |
+| Data leakage in logs | Redaction and no raw article logging |
+| Provider outage | Timeouts, normalized errors, bounded retries |
+| Stored report tampering | Server-side validation and access control |
+
+
+10. Production security checklist
+
+
+[ ] HTTPS enforced.
+
+
+[ ] Secrets stored securely.
+
+
+[ ] Rate limiting enabled.
+
+
+[ ] Request and file limits configured.
+
+
+[ ] Authentication and authorization tested (if enabled).
+
+
+[ ] User content not logged.
+
+
+[ ] CSP and security headers reviewed.
+
+
+[ ] Dependency audit performed.
+
+
+[ ] URL import SSRF protections tested (if enabled).
+
+
+[ ] Backup and deletion policies documented.
+
+
+[ ] Incident response contact/process defined.
+
+
+
+09 — Testing and QA Plan
+
+
+1. Test strategy
+Use a layered test approach:
+
+
+Unit tests for validation, scoring, winner selection and normalization.
+
+
+Integration tests for API routes and provider adapters.
+
+
+Contract tests for AI report schema.
+
+
+Component tests for article input and report UI.
+
+
+End-to-end tests for the full comparison workflow.
+
+
+Security tests for uploads, URL import and authorization.
+
+
+Human evaluation for editorial quality.
+
+
+2. Core functional test cases
+| ID | Scenario | Expected result |
+|---|---|---|
+| TC-001 | Submit 2 valid articles | Analysis starts and report contains A/B |
+| TC-002 | Submit 3 valid articles | Report contains A/B/C everywhere required |
+| TC-003 | Submit 4 valid articles | Report contains A/B/C/D everywhere required |
+| TC-004 | Submit 1 article | 400 validation error |
+| TC-005 | Submit 5 articles | 400 validation error |
+| TC-006 | Article under minimum length | Clear validation error |
+| TC-007 | Article exceeds max length | Clear validation error |
+| TC-008 | Empty article title | Allowed if title is optional; fallback title shown |
+| TC-009 | Unsupported provider | 400 error |
+| TC-010 | Missing provider key | Safe configuration error |
+| TC-011 | Provider returns malformed JSON | Controlled error or bounded repair attempt |
+| TC-012 | Provider timeout | Timeout message; input remains intact |
+| TC-013 | Provider rate limit | User-friendly retry guidance |
+| TC-014 | JSON export | Valid report JSON downloaded |
+| TC-015 | Duplicate submit | Only one active request or idempotent behavior |
+
+
+3. AI quality test cases
+
+
+Same article submitted twice should produce reasonably stable evaluations.
+
+
+Longer article must not automatically win.
+
+
+Article with clear factual caveats should be rewarded over unsupported certainty.
+
+
+SEO keyword stuffing should not receive an inflated score.
+
+
+A near-tie should be represented as close, not forced into a winner.
+
+
+Every recommendation should be grounded in supplied text.
+
+
+The system must state that facts are not independently verified in text-only mode.
+
+
+The model must not invent keyword search volume, difficulty or rankings.
+
+
+3- and 4-article reports must include every article in every applicable matrix row.
+
+
+4. Security tests
+
+
+Oversized request rejected.
+
+
+Invalid JSON rejected.
+
+
+HTML/script input displayed safely.
+
+
+Provider keys absent from browser bundle and API response.
+
+
+Rate limit blocks repeated abusive requests.
+
+
+Unauthorized user cannot read another user's saved report.
+
+
+URL importer blocks private IPs and redirect-based SSRF.
+
+
+Malformed/oversized file rejected.
+
+
+5. Accessibility tests
+
+
+Keyboard-only completion of comparison.
+
+
+Screen reader labels for all inputs.
+
+
+Visible focus states.
+
+
+Contrast checks.
+
+
+Score chart text alternatives.
+
+
+Mobile zoom and reflow.
+
+
+Reduced-motion behavior.
+
+
+6. Cross-browser and responsive tests
+
+
+Chrome desktop/mobile.
+
+
+Edge desktop.
+
+
+Firefox desktop.
+
+
+Safari macOS/iOS.
+
+
+Common viewport widths: 360, 390, 768, 1024, 1280, 1440.
+
+
+7. Release gates
+A release cannot ship if:
+
+
+Provider secrets are exposed.
+
+
+Article IDs are missing from report.
+
+
+Report schema validation is bypassed.
+
+
+A model can claim ranking predictions from text-only input.
+
+
+User data isolation fails.
+
+
+Core workflow fails on supported browsers.
+
+
+Critical accessibility or security defects remain.
+
+
+8. Suggested automation stack
+
+
+Unit/integration: Vitest or Jest.
+
+
+UI/component: React Testing Library.
+
+
+E2E: Playwright.
+
+
+Validation: Zod.
+
+
+Static checks: ESLint.
+
+
+Dependency checks: npm audit plus a trusted dependency scanner.
+Select exact versions compatible with the installed Next.js release during implementation.
+
+
+
+10 — Deployment and Operations
+
+
+1. Environments
+
+
+Local development.
+
+
+Preview/staging.
+
+
+Production.
+Use separate AI provider API keys for development, staging and production. No database credentials are required.
+
+
+2. Environment variables
+# ApplicationNODE_ENV=developmentAPP_URL=http://localhost:3000# AI provider selectionAI_PROVIDER=gemini# OpenAIOPENAI_API_KEY=OPENAI_MODEL=# Google GeminiGEMINI_API_KEY=GEMINI_MODEL=# Future authenticationAUTH_SECRET=AUTH_URL=# Future rate limiting / queue (only if adopted)REDIS_URL=
+Never commit real secrets. Keep `.env.example` populated with blank placeholders only.
+**Important baseline correction:** The starter README and `.env.example` contain different Gemini model defaults. Choose a currently supported model identifier, verify it against the provider's current model documentation, and keep it configurable. Do not rely on the model default embedded in old code.
+
+
+3. Local setup
+npm installcp .env.example .env.localnpm run dev
+Open `http://localhost:3000`.
+Before release:
+npm run buildnpm run start
+Run the test and lint commands configured by the project. Review the current Next.js version's supported lint command rather than assuming a script remains valid after framework upgrades.
+
+
+4. Deployment steps
+
+
+Push code to a private or approved Git repository.
+
+
+Create the hosting project.
+
+
+Configure environment variables in the hosting dashboard.
+
+
+Configure build command and Node.js runtime.
+
+
+Deploy preview.
+
+
+Test provider connectivity and error paths.
+
+
+Confirm secrets are not exposed in client assets.
+
+
+Configure custom domain and HTTPS.
+
+
+Deploy production.
+10. Monitor logs, latency and provider usage.
+Vercel is a straightforward option for a Next.js application. Other Node-compatible hosts are possible if they support the required runtime and route handlers.
+
+
+5. Database deployment (not applicable)
+
+
+No database provisioning is required.
+
+
+No `DATABASE_URL` is required.
+
+
+Run No ORM migrations through deployment pipeline.
+
+
+Use pooled connections where required by the hosting environment.
+
+
+No database backup or restore process is required.
+
+
+Apply migrations in a controlled release process.
+
+
+6. Observability
+Track:
+
+
+Request ID.
+
+
+Endpoint and status.
+
+
+Provider/model.
+
+
+Duration.
+
+
+Token usage/cost metadata where available.
+
+
+Validation failures.
+
+
+Provider error category.
+
+
+Analysis success/failure rate.
+Do not log API keys, full article bodies or complete prompts by default.
+
+
+7. Cost management
+
+
+Set provider billing alerts.
+
+
+Enforce per-user quotas.
+
+
+Enforce max article size and total token budget.
+
+
+Limit concurrent calls.
+
+
+Track average cost per comparison.
+
+
+Provide a maximum-cost safeguard for large requests.
+
+
+Use cheaper models only after quality benchmarking.
+
+
+8. Backup and recovery (future)
+
+
+Define retention only for operational logs; do not store article text or comparison reports on the server.
+
+
+Test restore regularly.
+
+
+Define RPO and RTO based on product criticality.
+
+
+Keep migrations and deployment artifacts versioned.
+
+
+Document rollback procedure.
+
+
+9. Incident response
+For provider outage:
+
+
+Show provider unavailable state.
+
+
+Preserve user input.
+
+
+Offer retry or alternate configured provider.
+
+
+Do not switch provider silently if privacy/provider choice was explicit.
+For cost spike:
+
+
+Apply rate limit/quota controls.
+
+
+Disable abusive accounts or keys as appropriate.
+
+
+Rotate exposed credentials.
+
+
+Review audit and usage events.
+
+
+10. Operational checklist
+
+
+[ ] Production secrets configured.
+
+
+[ ] Model IDs verified.
+
+
+[ ] Build passes.
+
+
+[ ] Provider smoke tests pass.
+
+
+[ ] Error monitoring configured.
+
+
+[ ] Rate limiting enabled.
+
+
+[ ] Usage limits enabled.
+
+
+[ ] Privacy notice published.
+
+
+[ ] Domain and HTTPS configured.
+
+
+[ ] Rollback procedure tested.
+
+
+
+11 — Development Roadmap
+
+
+Phase 0 — Baseline review
+**Goal:** Understand and stabilize the existing starter.
+Tasks:
+
+
+Review current UI and API.
+
+
+Align environment variable defaults.
+
+
+Add request validation with Zod.
+
+
+Define report schema.
+
+
+Add deterministic score calculation.
+
+
+Add normalized error responses.
+
+
+Add unit and integration tests.
+
+
+Confirm provider model identifiers.
+Exit criteria:
+
+
+Existing 2–4 article flow works.
+
+
+OpenAI and Gemini adapters are isolated.
+
+
+Validated report returned.
+
+
+No secrets exposed.
+
+
+Build and tests pass.
+
+
+Phase 1 — MVP completion
+**Goal:** Deliver a reliable single-user article comparison workspace.
+Tasks:
+
+
+Improve article editor UX.
+
+
+Add clear article count controls.
+
+
+Add context panel.
+
+
+Add loading and error states.
+
+
+Add report overview and detail sections.
+
+
+Add score matrix for 2–4 articles.
+
+
+Add no-clear-winner behavior.
+
+
+Add JSON and Markdown export.
+
+
+Add responsive/accessibility polish.
+Exit criteria:
+
+
+MVP acceptance criteria in PRD met.
+
+
+Full test suite passes.
+
+
+Editorial benchmark reviewed by human editors.
+
+
+Phase 2 — Import and report usability
+**Goal:** Reduce manual content preparation.
+Tasks:
+
+
+URL import with SSRF protection.
+
+
+PDF and DOCX parsing.
+
+
+Extracted text preview and edit step.
+
+
+Side-by-side article viewer.
+
+
+Evidence-linked observations.
+
+
+Report print/PDF export.
+Exit criteria:
+
+
+Supported imports pass security and parser tests.
+
+
+User can inspect/edit extracted text before analysis.
+
+
+Evidence references point to correct article sections.
+
+
+Phase 3 — Optional product expansion (only if requirements change)
+**Goal:** Save work safely.
+Tasks:
+
+
+Only consider accounts if cross-device history or team workspaces become confirmed requirements; these are outside the MVP.
+
+
+No database or ORM.
+
+
+Comparison history.
+
+
+Projects.
+
+
+Saved report versions.
+
+
+User deletion/export.
+
+
+Ownership and access-control tests.
+Exit criteria:
+
+
+No account-based comparison management is included in the database-free MVP.
+
+
+Migrations and backups tested.
+
+
+Phase 4 — Team workspace and governance
+**Goal:** Support agencies and editorial teams.
+Tasks:
+
+
+Workspaces and roles.
+
+
+Invitations.
+
+
+Shared projects.
+
+
+Comments and review notes.
+
+
+Usage quotas.
+
+
+Admin dashboard.
+
+
+Audit events.
+Exit criteria:
+
+
+Role matrix enforced server-side.
+
+
+Team data isolation verified.
+
+
+Usage metering accurate.
+
+
+Phase 5 — Research and editorial intelligence
+**Goal:** Expand from text-only comparison to evidence-assisted evaluation.
+Tasks:
+
+
+Optional web research mode.
+
+
+Source collection and citations.
+
+
+Claim-to-source mapping.
+
+
+Fact-check workflow.
+
+
+Search result analysis integration, if licensed/provider available.
+
+
+Keyword metrics integration, if a trusted provider is selected.
+
+
+Hybrid final-draft editor.
+Exit criteria:
+
+
+Research claims cite sources.
+
+
+Text-only and research-assisted modes are clearly distinguished.
+
+
+No ranking claims without actual data.
+
+
+Suggested implementation order
+
+
+Stabilize current route and report contract.
+
+
+Build validation/schema/score modules.
+
+
+Finish results UI.
+
+
+Add tests.
+
+
+Add export.
+
+
+Add URL/file imports.
+
+
+Do not add authentication or a database to the MVP.
+
+
+Add team features.
+
+
+Add research integrations.
+
+
+Dependency warning
+Do not begin billing, team workspaces or external research until the core comparison engine is reliable and its scoring behavior has been benchmarked.
+
+
+
+12 — Project Structure and Architecture Decision Records
+
+
+1. Recommended folder structure
+JavaScript/JSX only.
+articlecompare-ai/├── app/│   ├── (marketing)/│   │   └── page.jsx│   ├── (workspace)/│   │   ├── dashboard/page.jsx│   │   ├── compare/new/page.jsx│   │   ├── comparisons/[comparisonId]/page.jsx│   │   └── settings/page.jsx│   ├── api/│   │   ├── compare/route.js│   │   ├── comparisons/route.js│   │   ├── comparisons/[comparisonId]/route.js│   │   ├── import/url/route.js│   │   └── import/file/route.js│   ├── globals.css│   ├── layout.jsx│   └── not-found.jsx├── components/│   ├── layout/│   ├── comparison/│   ├── articles/│   ├── report/│   ├── charts/│   └── ui/├── lib/│   ├── ai/│   │   ├── providers/│   │   │   ├── openai.adapter.js│   │   │   └── gemini.adapter.js│   │   ├── provider-registry.js│   │   ├── prompt-builder.js│   │   └── report-schema.js│   ├── comparison/│   │   ├── normalize-articles.js│   │   ├── score-calculator.js│   │   ├── winner-selector.js│   │   └── report-validator.js│   ├── validation/│   ├── import/│   ├── security/│   └── utils/├── public/├── tests/│   ├── unit/│   ├── integration/│   └── e2e/├── docs/├── .env.example├── .gitignore├── jsconfig.json├── next.config.mjs├── package.json└── README.md
+
+
+2. Naming and code conventions
+
+
+Components: PascalCase filenames where practical.
+
+
+Functions and variables: camelCase.
+
+
+Constants: UPPER_SNAKE_CASE for true constants.
+
+
+Route handlers: `route.js`.
+
+
+React components: `.jsx`.
+
+
+Server-only modules should be clearly separated from client components.
+
+
+Never import provider SDKs/secrets into client components.
+
+
+Prefer small components and domain-focused modules.
+
+
+3. Architecture Decision Records
+
+
+ADR-001: Next.js modular monolith
+**Decision:** Use one Next.js application with modular server-side domains.
+**Reason:** Faster delivery, simpler deployment and adequate for initial scale.
+**Trade-off:** Requires discipline to keep modules separated.
+
+
+ADR-002: JavaScript/JSX, not TypeScript
+**Decision:** All application code uses JavaScript/JSX.
+**Reason:** Matches the project owner's explicit preference.
+**Trade-off:** Runtime validation and strong schema contracts become especially important.
+
+
+ADR-003: OpenAI and Gemini provider adapters
+**Decision:** Support both providers through a shared interface.
+**Reason:** Provider choice, resilience and cost/quality experimentation.
+**Trade-off:** Structured-output capabilities differ; adapters must normalize behavior.
+
+
+ADR-004: No database; browser-only storage
+**Decision:** Do not use a database or ORM. Process comparisons transiently and optionally store history in browser localStorage.
+**Reason:** Relational ownership and report history fit a relational model.
+**Trade-off:** Adds migrations, connection management and operational complexity.
+
+
+ADR-005: Editorial score, not ranking score
+**Decision:** Scores represent an editorial rubric only.
+**Reason:** Search ranking depends on many external signals unavailable to text-only analysis.
+**Trade-off:** Product must explain limitations clearly.
+
+
+ADR-006: Human remains final decision-maker
+**Decision:** AI recommends; editor decides.
+**Reason:** Content accuracy, brand context and publication standards require human judgment.
+
+
+4. Starter-to-target migration notes
+
+
+Current `app/page.jsx` can be decomposed into workspace and report components.
+
+
+Current `app/api/compare/route.js` should become a thin route calling validation and orchestration services.
+
+
+Current `lib/prompt.js` should be split into versioned prompt builder and output schema.
+
+
+Current provider calls should move into provider adapters.
+
+
+Add Zod or equivalent runtime validation.
+
+
+Compute overall scores deterministically after validating dimension scores.
+
+
+Add request ID and normalized error response.
+
+
+Keep the application database-free; revisit only if accounts or cross-device saved history become a confirmed requirement.
+
+
+
+13 — Glossary and Open Decisions
+
+
+1. Glossary
+
+
+**Article:** One submitted content draft.
+
+
+**Comparison:** One analysis session containing 2–4 articles and context.
+
+
+**Analysis run:** One execution of the AI evaluation pipeline.
+
+
+**Report:** Normalized result from an analysis run.
+
+
+**Search intent:** The underlying reason a person searches for a query.
+
+
+**Content gap:** A relevant topic, explanation or question missing or underdeveloped in an article.
+
+
+**Editorial score:** A rubric-based estimate of article quality for a stated goal.
+
+
+**Winner:** The article with the strongest supported overall fit; may be absent in a close or weak comparison.
+
+
+**Hybrid recommendation:** Guidance on combining strengths from different articles.
+
+
+**Provider:** External AI service, such as OpenAI or Google Gemini.
+
+
+**Prompt version:** Identifier for the exact prompt logic used in an analysis.
+
+
+**Schema version:** Version of the report data contract.
+
+
+**Evidence:** Text or source material supporting a specific evaluation statement.
+
+
+**Research mode:** Optional future mode that retrieves external sources and cites them.
+
+
+2. Decisions to confirm before production
+| Decision | Recommended default | Why it matters |
+|---|---|---|
+| Product name | ArticleCompare AI | Branding, domain and metadata |
+| Authentication | Add after MVP | Avoid slowing initial validation |
+| Guest comparisons | Limited, rate-limited | Acquisition vs cost abuse |
+| Saved content | Explicit user opt-in | Privacy and retention |
+| Max article length | Configurable, current 60k chars | Cost and context windows |
+| Supported languages | Multilingual input, English UI initially | Prompt and quality testing |
+| Report exports | JSON + Markdown first; PDF later | Delivery scope |
+| URL import | Phase 2 | SSRF and extraction complexity |
+| Research mode | Separate opt-in mode | Citation and source requirements |
+| Team collaboration | Later phase | Roles and workspace model |
+| Billing | Only after usage economics validated | Product/business model |
+| Model selection | Admin-configured allowlist | Cost, capability and provider changes |
+
+
+3. Risks and mitigations
+
+
+**Inconsistent AI scoring:** benchmark with human-reviewed examples and version prompts.
+
+
+**False claims of factual accuracy:** label text-only mode and add source-based verification separately.
+
+
+**Cost spikes:** token caps, quotas, rate limits and usage monitoring.
+
+
+**Provider model changes:** configurable model IDs and smoke tests.
+
+
+**Long input failures:** token estimation, chunking strategy or clear input limits.
+
+
+**Privacy concerns:** transparent provider disclosure and retention controls.
+
+
+**SEO overpromising:** never present editorial score as Google/Bing ranking probability.
+
+
+**Import vulnerabilities:** safe parser and SSRF controls.
+
+
+4. Definition of done
+A feature is complete when:
+
+
+Requirements and acceptance criteria are met.
+
+
+UI states are implemented.
+
+
+Validation and authorization are server-side.
+
+
+Unit/integration/E2E tests are added where relevant.
+
+
+Accessibility is reviewed.
+
+
+Errors are handled and logged safely.
+
+
+Documentation and environment examples are updated.
+
+
+No secret or user content is accidentally exposed.
+
