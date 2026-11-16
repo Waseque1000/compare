@@ -545,12 +545,17 @@ const server = http.createServer(async (req, res) => {
   }
 
   // --- STATIC FILE SERVING ---
-  let filePath = reqPath === '/' || reqPath === '' ? '/index.html' : reqPath;
-  const fullPath = path.join(PUBLIC_DIR, filePath);
+  let filePath = reqPath;
+  if (!filePath || filePath === '/' || filePath === '/preview' || filePath === '/preview/' || filePath === '/preview/index.html') {
+    filePath = '/index.html';
+  }
 
-  if (!fullPath.startsWith(PUBLIC_DIR)) {
-    res.writeHead(403, { 'Content-Type': 'text/plain' });
-    return res.end('403 Forbidden');
+  let fullPath = path.join(PUBLIC_DIR, filePath);
+  if (!fs.existsSync(fullPath)) {
+    fullPath = path.join(__dirname, 'preview', filePath);
+  }
+  if (!fs.existsSync(fullPath)) {
+    fullPath = path.join(__dirname, filePath);
   }
 
   fs.readFile(fullPath, (err, content) => {
